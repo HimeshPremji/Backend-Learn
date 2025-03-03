@@ -1,0 +1,41 @@
+# Ignore all files in node_modules
+node_modules/
+
+# Ignore all files in build directory
+build/
+
+# Ignore all files in coverage directory
+coverage/
+
+# Ignore all files in .next directory (for Next.js projects)
+.next/
+
+# Ignore all files in dist directory
+dist/
+
+# Ignore all files in public directory
+public/
+
+# Ignore all files in .git directory
+.git/
+
+# Ignore all files in .cache directory
+.cache/
+
+# Ignore all files in logs directory
+logs/
+
+# Ignore all files in temp directory
+temp/
+
+# Ignore all files in .vscode directory
+.vscode/
+
+# Ignore all files in .idea directory (for JetBrains IDEs)
+.idea/
+
+# Ignore all files in .DS_Store (macOS specific)
+.DS_Store
+
+# Ignore all files in .env files
+.env
