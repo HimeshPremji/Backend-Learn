@@ -1,8 +1,8 @@
-import dotenv from 'dotenv';
-import connectDB from './db/index.js';
-import express from 'express';
-import app from './app.js';
-dotenv.config({ path: './env' });
+import dotenv from "dotenv";
+import connectDB from "./db/index.js";
+import express from "express";
+import app from "./app.js";
+dotenv.config({ path: "./.env" });
 
 connectDB()
   .then(() => {
@@ -11,5 +11,5 @@ connectDB()
     });
   })
   .catch((error) => {
-    console.log('MONGODB CONNECTIONS FAILED !!! ', error);
+    console.log("MONGODB CONNECTIONS FAILED !!! ", error);
   });
