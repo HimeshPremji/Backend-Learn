@@ -16,7 +16,3 @@ const connectDB = async () => {
 };
 
 export default connectDB;
-
-const abc = 'abc';
-
-abc.array.forEach((element) => {});
