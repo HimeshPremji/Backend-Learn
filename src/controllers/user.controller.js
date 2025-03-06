@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const cookiesOptions = {
   httpOnly: true,
@@ -384,7 +385,71 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(ApiResponse(200, channel[0], "User channel fetched successfully"));
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
+});
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      // Step 1: Find the user by their unique _id
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id), // Convert req.user._id into an ObjectId to match the MongoDB format
+      },
+    },
+    {
+      // Step 2: Perform a lookup to fetch video details for each video in the user's watch history
+      $lookup: {
+        from: "videos", // Reference the 'videos' collection
+        localField: "watchHistory", // The 'watchHistory' array in the User schema contains video IDs
+        foreignField: "_id", // Match these video IDs with the '_id' field in the 'videos' collection
+        as: "watchHistory", // Store the matched video documents in the 'watchHistory' array
+
+        // Step 3: Use a pipeline to further modify the video objects in watch history
+        pipeline: [
+          {
+            // Nested lookup to fetch owner details for each video
+            $lookup: {
+              from: "users", // Reference the 'users' collection
+              localField: "owner", // The 'owner' field in videos refers to the user who uploaded it
+              foreignField: "_id", // Match the owner's '_id' in the 'users' collection
+              as: "owner", // Store the matched user details in the 'owner' array
+
+              // Step 4: Select only specific fields from the user (owner) data
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1, // Include only the full name of the owner
+                    username: 1, // Include the username of the owner
+                    avatar: 1, // Include the avatar of the owner
+                  },
+                },
+              ],
+            },
+          },
+          {
+            // Step 5: Convert 'owner' array into a single object (since lookup returns an array)
+            $addFields: {
+              owner: {
+                $first: "$owner", // Extract the first element from the 'owner' array (since a video has only one owner)
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "watch history has been send successfully"
+      )
+    );
 });
 
 export {
@@ -397,4 +462,6 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  getUserChannelProfile,
+  getWatchHistory,
 };
