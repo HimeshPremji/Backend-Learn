@@ -8,7 +8,8 @@ import mongoose from "mongoose";
 
 const cookiesOptions = {
   httpOnly: true,
-  secure: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "Lax",
 };
 
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -19,8 +20,6 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
-
-    console.log("accessToken", accessToken, "refreshToken", refreshToken);
 
     return { accessToken, refreshToken };
   } catch (error) {
@@ -60,7 +59,6 @@ const registerUser = asyncHandler(async (req, res) => {
   ) {
     avatarLocalPath = req.files.avatar[0].path;
   }
-
   let coverImageLocalPath;
   if (
     req.files &&
@@ -102,7 +100,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
-  console.log(email);
 
   if (!username && !email)
     throw new ApiError(400, "username or email is required");
@@ -121,9 +118,7 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
 
-  const loggedInUser = await User.findById(user._id).select(
-    "-password -refreshToken"
-  );
+  const loggedInUser = await User.findById(user._id).select("-password");
 
   return res
     .status(200)
@@ -147,7 +142,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
       req.user._id,
       {
-        $set: { refreshToken: undefined },
+        $usset: { refreshToken: 1 }, // removes the field from user document
       },
       { new: true }
     );
@@ -166,40 +161,52 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
 
+  // console.log("req.cookies.refreshToken", req.cookies.refreshToken);
+  // console.log("refreshToken Variable is", incomingRefreshToken);
+
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
   }
 
   try {
     // jwt tokens which are encrypted are inside incomingRefreshToken
+    // console.log("AFTER refreshToken Variable is AFTER", incomingRefreshToken);
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
+
+    // console.log("decodedToken", decodedToken);
+    // console.log("decodedToken id here", decodedToken._id);
 
     const user = await User.findById(decodedToken?._id);
 
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
+    // console.log("User found:", user);
+    // console.log("User's stored refresh token:", user?.refreshToken);
+    // console.log("Incoming refresh token:", incomingRefreshToken);
 
-    // jwt tokens which are encrypted are inside user?>refreshToken
+    // jwt tokens which are encrypted are inside user?.refreshToken
     // if both tokens doesnt match it meants somethings wrong with the tokens
     if (incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "Refresh token is expired or used");
     }
 
-    const { accessToken, newRefreshToken } =
-      await generateAccessAndRefreshTokens(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+      user._id
+    );
+    // console.log("Generated new refresh token:", refreshToken);
 
     return res
       .status(200)
       .cookie("accessToken", accessToken, cookiesOptions)
-      .cookie("refreshToken", newRefreshToken, cookiesOptions)
+      .cookie("refreshToken", refreshToken, cookiesOptions)
       .json(
         new ApiResponse(
           200,
-          { accessToken, refreshToken: newRefreshToken },
+          { accessToken, refreshToken },
           "Acccess token successfully refreshed"
         )
       );
@@ -229,6 +236,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 });
 
 const getCurrectUser = asyncHandler(async (req, res) => {
+  // console.log("your username is ", req.user);
   return res
     .status(200)
     .json(200, req.user, "currect user fetched successfully");

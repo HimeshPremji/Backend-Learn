@@ -33,14 +33,12 @@ router.route("/update-account-details").patch(verifyJWT, updateAccountDetails);
 
 router
   .route("/update-avatar")
-  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
+  .patch(verifyJWT, upload.single("avatarLocalPath"), updateUserAvatar);
 router
   .route("/update-coverimage")
-  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
+  .patch(verifyJWT, upload.single("coverImageLocalPath"), updateUserCoverImage);
 
 router.route("/channel/:username").get(verifyJWT, getUserChannelProfile);
-
 router.route("/history").get(verifyJWT, getWatchHistory);
-// secure routes
 
 export default router;
