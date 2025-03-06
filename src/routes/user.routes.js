@@ -24,21 +24,30 @@ router.route("/register").post(
   registerUser
 );
 
-router.route("/login").post(loginUser);
-router.route("/logout").post(verifyJWT, logoutUser);
-router.route("/refresh-token").post(refreshAccessToken);
-router.route("/change-password").post(verifyJWT, changeCurrentPassword);
-router.route("/current-user").get(verifyJWT, getCurrectUser);
-router.route("/update-account-details").patch(verifyJWT, updateAccountDetails);
+// Authentication routes
+router.route("/auth/login").post(loginUser);
+router.route("/auth/logout").post(verifyJWT, logoutUser);
+router.route("/auth/refresh-token").post(refreshAccessToken);
+
+// User account routes
+router
+  .route("/me")
+  .get(verifyJWT, getCurrectUser) // GET /me
+  .patch(verifyJWT, updateAccountDetails); // PATCH /me
+
+router.route("/me/password").patch(verifyJWT, changeCurrentPassword); //me/password
+
+// Media update routes
+router
+  .route("/me/avatar")
+  .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 
 router
-  .route("/update-avatar")
-  .patch(verifyJWT, upload.single("avatarLocalPath"), updateUserAvatar);
-router
-  .route("/update-coverimage")
-  .patch(verifyJWT, upload.single("coverImageLocalPath"), updateUserCoverImage);
+  .route("/me/cover-image")
+  .patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 
-router.route("/channel/:username").get(verifyJWT, getUserChannelProfile);
-router.route("/history").get(verifyJWT, getWatchHistory);
+// Channel and history routes
+router.route("/channels/:username").get(getUserChannelProfile);
+router.route("/me/watch-history").get(verifyJWT, getWatchHistory);
 
 export default router;
