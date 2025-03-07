@@ -25,7 +25,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
   } catch (error) {
     throw new ApiError(
       500,
-      "Failed to generate access and refresh tokens. Please try again."
+      "Failed to generate access and refresh tokens. Please try again.",
     );
   }
 };
@@ -86,7 +86,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken"
+    "-password -refreshToken",
   );
 
   if (!createdUser) {
@@ -115,11 +115,11 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordValid)
     throw new ApiError(
       401,
-      "Invalid credentials. Please check your login details."
+      "Invalid credentials. Please check your login details.",
     );
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user._id
+    user._id,
   );
 
   const loggedInUser = await User.findById(user._id).select("-password");
@@ -136,8 +136,8 @@ const loginUser = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
         },
-        "User Logged In Successfully."
-      )
+        "User Logged In Successfully.",
+      ),
     );
 });
 
@@ -148,7 +148,7 @@ const logoutUser = asyncHandler(async (req, res) => {
       {
         $usset: { refreshToken: 1 }, // removes the field from user document
       },
-      { new: true }
+      { new: true },
     );
 
     return res
@@ -177,7 +177,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     // console.log("AFTER refreshToken Variable is AFTER", incomingRefreshToken);
     const decodedToken = jwt.verify(
       incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET
+      process.env.REFRESH_TOKEN_SECRET,
     );
 
     // console.log("decodedToken", decodedToken);
@@ -199,7 +199,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-      user._id
+      user._id,
     );
     // console.log("Generated new refresh token:", refreshToken);
 
@@ -211,8 +211,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           { accessToken, refreshToken },
-          "Access token refreshed successfully."
-        )
+          "Access token refreshed successfully.",
+        ),
       );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token");
@@ -261,7 +261,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
           username: newUserName,
         },
       },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     if (!updatedUser) {
@@ -274,8 +274,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           updatedUser,
-          "Account details updated successfully."
-        )
+          "Account details updated successfully.",
+        ),
       );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid Acccess");
@@ -298,7 +298,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     { $set: { avatar: cloudAvatar.url } },
-    { new: true }
+    { new: true },
   ).select("-password");
 
   return res
@@ -322,7 +322,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     { $set: { coverImage: cloudCoverImage.url } },
-    { new: true }
+    { new: true },
   ).select("-password");
 
   // Delete old picture from public file
@@ -402,7 +402,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(200, channel[0], "Channel detail fetched successfully.")
+      new ApiResponse(200, channel[0], "Channel detail fetched successfully."),
     );
 });
 
@@ -463,8 +463,8 @@ const getWatchHistory = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         user[0].watchHistory,
-        "Watch history retrieved successfully."
-      )
+        "Watch history retrieved successfully.",
+      ),
     );
 });
 
