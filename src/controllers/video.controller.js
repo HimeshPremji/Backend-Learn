@@ -14,6 +14,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
 
+  if (!title?.trim()) throw new ApiError(400, "Title is required.");
+
   if (!req.files || !req.files.videoFile || !req.files.thumbnail) {
     throw new ApiError(400, "Video and thumbnail are required.");
   }
@@ -118,7 +120,7 @@ const updateVideo = asyncHandler(async (req, res) => {
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
-  const { videoId } = req.params.videoId;
+  const { videoId } = req.params;
   //TODO: delete video
   if (!videoId) throw new ApiError(400, "Video ID is required.");
 
