@@ -10,7 +10,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const { page = 1, limit = 10 } = req.query;
 
-  const comments = await Comment.findById({ video: videoId })
+  const comments = await Comment.find({ video: videoId })
     .populate("owner", "content")
     .skip((page - 1) * limit)
     .limit(parseInt(limit))
@@ -27,6 +27,10 @@ const addComment = asyncHandler(async (req, res) => {
   if (!video) {
     throw new ApiError(404, "Video not found");
   }
+  if (!req.body.content?.trim()) {
+    throw new ApiError(400, "Comment content cannot be empty.");
+  }
+
   const comment = new Comment({
     content: req.body.content,
     video: video._id,
@@ -55,19 +59,13 @@ const deleteComment = asyncHandler(async (req, res) => {
   // TODO: delete a comment
   const { commentId } = req.params;
   const deletedComment = await Comment.findByIdAndDelete(commentId);
-  try {
-    if (!deletedComment) {
-      throw new ApiError(404, "Comment not found");
-    } else {
-      return res
-        .status(200)
-        .json(
-          new ApiResponse(200, deletedComment, "Comment deleted successfully"),
-        );
-    }
-  } catch (error) {
-    throw new ApiError(500, "An error occurred while deleting the comment");
+
+  if (!deletedComment) {
+    throw new ApiError(404, "Comment not found");
   }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, deletedComment, "Comment deleted successfully"));
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };
